@@ -1,0 +1,7 @@
+numpy
+torch
+scikit-learn
+tabpfn
+tabicl
+matplotlib
+notebook

@@ -44,6 +44,7 @@ def plot_data_2d(
 
 def plot_function_2d(
     function,
+    gridpoints=101,
     levels=(0.1, 0.3, 0.5, 0.7, 0.9),
     x_limits=None,
     y_limits=None,
@@ -66,8 +67,8 @@ def plot_function_2d(
         y_limits = ax.get_ylim()
 
     # create inputs
-    x_values = np.linspace(*x_limits, num=101)
-    y_values = np.linspace(*y_limits, num=101)
+    x_values = np.linspace(*x_limits, num=gridpoints)
+    y_values = np.linspace(*y_limits, num=gridpoints)
 
     (x_grid, y_grid) = np.meshgrid(x_values, y_values)
     xy_values = np.stack((x_grid.ravel(), y_grid.ravel()), axis=1)

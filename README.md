@@ -2,7 +2,10 @@
 
 This repository allows for an exploration of foundation models for tabular data. Prior-data fitted networks such as the TabPFN architecture are discussed in the [introduction](notebooks/intro.ipynb). Following this, a [classification](notebooks/tabicl_classif.ipynb) and a [regression](notebooks/tabicl_reg.ipynb) toy problem are solved for demonstration purposes. The TabICL model is used in those examples.
 
-<img src="assets/tabicl_classif.svg" alt="The half-moons test set is shown together with the TabICL predictions" title="Test data and TabICL predictions for classification" height="250">
+<p>
+  <img src="assets/tabicl_classif.svg" alt="The half-moons test set is shown together with the TabICL predictions" title="Test data and TabICL predictions for binary classification" height="230" style="padding-right: 1em;">
+  <img src="assets/tabicl_reg.svg" alt="A 1D regression analysis with heteroscedastic noise is carried out by TabICL" title="Train data and TabICL predictions for 1D regression" height="230">
+</p>
 
 
 ## Notebooks

@@ -5,14 +5,14 @@ import numpy as np
 
 
 def plot_data_2d(
-    X,
+    x,
     y,
     labels=None,
     colors=None,
     zorder=None,
     ax=None,
 ):
-    """Plot data points with labels on a two-dim. plane."""
+    """Plot data points with labels on a 2D plane."""
 
     if ax is None:
         fig, ax = plt.subplots()
@@ -24,8 +24,8 @@ def plot_data_2d(
 
     for idx, label in enumerate(labels):
         ax.scatter(
-            X[y == label, 0],
-            X[y == label, 1],
+            x[y == label, 0],
+            x[y == label, 1],
             color=None if colors is None else colors[idx],
             alpha=0.7,
             edgecolors="none",

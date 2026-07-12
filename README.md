@@ -13,3 +13,10 @@ This repository allows for an exploration of foundation models for tabular data.
 - [Introduction](notebooks/intro.ipynb)
 - [TabICL for classification](notebooks/tabicl_classif.ipynb)
 - [TabICL for regression](notebooks/tabicl_reg.ipynb)
+
+
+## Installation
+
+```bash
+pip install -e .
+```

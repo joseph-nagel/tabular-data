@@ -11,39 +11,17 @@ from .model import SimplePFN
 
 class SimplePFNClassifier:
     """
-    Simple PFN classifier with scikit-learn's fit/predict-interface.
+    Simple PFN classifier with a fit/predict-interface scikit-learn.
 
     Parameters
     ----------
     model : SimplePFN
+        PFN model to be wrapped.
 
     """
 
     def __init__(self, model: SimplePFN):
         self.model = model
-
-    def fit(self, x_train: np.ndarray, y_train: np.ndarray, num_labels: int | None = None) -> Self:
-        """Prepare and store train data."""
-
-        # set training data
-        self.x_train = self._preprocess_features(x_train)  # (num_train, num_features)
-        self.y_train = self._preprocess_targets(y_train)  # (num_train,) or (num_train, 1)
-
-        if len(x_train) != len(y_train):
-            raise ValueError("Training data size does not match")
-
-        # set number of classes
-        if num_labels is None:
-            unique_labels = np.unique(y_train)
-            num_labels = len(unique_labels)
-            max_label = unique_labels.max()
-
-            if num_labels != max_label + 1:
-                raise ValueError("Not all labels in training set")
-
-        self.num_labels = num_labels
-
-        return self
 
     # TODO: impute NaNs, encode categoricals, remove constants
     @staticmethod
@@ -65,12 +43,36 @@ class SimplePFNClassifier:
             raise ValueError(f"Invalid targets shape: {y.shape}")
         return y
 
-    @torch.no_grad()
+    def fit(self, x_train: np.ndarray, y_train: np.ndarray, num_labels: int | None = None) -> Self:
+        """Prepare and store train data."""
+        # set training data
+        self.x_train = self._preprocess_features(x_train)  # (num_train, num_features)
+        self.y_train = self._preprocess_targets(y_train)  # (num_train,) or (num_train, 1)
+
+        if len(x_train) != len(y_train):
+            raise ValueError("Training data size does not match")
+
+        # set number of classes
+        if num_labels is None:
+            unique_labels = np.unique(y_train)
+            num_labels = len(unique_labels)
+            max_label = unique_labels.max()
+
+            if num_labels != max_label + 1:
+                raise ValueError("Not all labels in training set")
+
+        self.num_labels = num_labels
+
+        return self
+
+    # TODO: generalize device handling
     def predict_proba(self, x_test: np.ndarray) -> np.ndarray:
         """Predict probabilities."""
+        # concatenate train and test features
         x_test = self._preprocess_features(x_test)  # (num_test, num_features)
         x = np.concatenate((self.x_train, x_test), axis=0)  # (num_train + num_test, num_features)
 
+        # prepare tensors
         x = torch.from_numpy(x).unsqueeze(0)  # (1, num_train + num_test, num_features)
         y_train = torch.from_numpy(self.y_train).unsqueeze(0)  # (1, num_train)
 
@@ -78,11 +80,12 @@ class SimplePFNClassifier:
             x = x.to(self.model.device)
             y_train = y_train.to(self.model.device)
 
-        y_logits = self.model(x, y_train)  # (1, num_test, num_classes)
+        # predict
+        with torch.no_grad():
+            y_logits = self.model(x, y_train)  # (1, num_test, num_classes)
         y_probas = nn.functional.softmax(y_logits, dim=-1)  # (1, num_test, num_classes)
-        y_probas = y_probas.squeeze(0)  # (num_test, num_classes)
 
-        return y_probas.cpu().numpy()
+        return y_probas.squeeze(0).cpu().numpy()  # (num_test, num_classes)
 
     def predict(self, x_test: np.ndarray) -> np.ndarray:
         """Predict class labels."""

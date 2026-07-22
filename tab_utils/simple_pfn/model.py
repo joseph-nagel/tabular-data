@@ -26,7 +26,7 @@ from .layers import (
 
 class SimplePFN(nn.Module):
     """
-    Simple Tabular PFN architecture.
+    Simple tabular PFN architecture for classification.
 
     Parameters
     ----------

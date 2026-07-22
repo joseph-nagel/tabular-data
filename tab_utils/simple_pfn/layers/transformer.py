@@ -5,7 +5,21 @@ import torch.nn as nn
 
 
 class TabularTransformer(nn.Sequential):
-    """Tabular transformer (from TabPFN-v2)."""
+    """
+    Tabular transformer (from TabPFN-v2).
+
+    Parameters
+    ----------
+    num_blocks : int
+        Number of attention blocks in the transformer.
+    num_heads : int
+        Number of attention heads in the transformer.
+    embed_dim : int
+        Dimensionality of the cell embeddings.
+    hidden_dim : int
+        Hidden dimensionality of the MLP.
+
+    """
 
     def __init__(self, num_blocks: int, num_heads: int, embed_dim: int, hidden_dim: int):
         super().__init__()
@@ -24,7 +38,19 @@ class TabularTransformer(nn.Sequential):
 
 
 class TabularTransformerBlock(nn.Module):
-    """Tabular transformer block (from TabPFN-v2)."""
+    """
+    Tabular transformer block (from TabPFN-v2).
+
+    Parameters
+    ----------
+    num_heads : int
+        Number of attention heads in the transformer.
+    embed_dim : int
+        Dimensionality of the cell embeddings.
+    hidden_dim : int
+        Hidden dimensionality of the MLP.
+
+    """
 
     def __init__(self, num_heads: int, embed_dim: int, hidden_dim: int):
         super().__init__()
@@ -91,8 +117,9 @@ class TabularTransformerBlock(nn.Module):
         # flatten batch and row dimensions
         x = x.flatten(0, 1)  # (B*C, R, E)
 
-        # apply self-attention
+        # apply attention
         if num_train is None:
+            # let all data attend to itself
             x = self.attention_between_samples(x, x, x, need_weights=False)[0]  # (B*C, R, E)
         else:
             x_train = x[:, :num_train]

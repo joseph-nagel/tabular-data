@@ -1,6 +1,7 @@
 """Simple PFN for tabular data."""
 
-from . import layers, model
+from . import classifier, layers, model
+from .classifier import SimplePFNClassifier
 from .layers import (
     FeatureNormalization,
     RepeatedFeatureGrouping,

@@ -4,6 +4,7 @@ from . import data, simple_pfn, vis
 from .data import make_regression_data
 from .simple_pfn import (
     SimplePFN,
+    SimplePFNClassifier,
     FeatureNormalization,
     RepeatedFeatureGrouping,
     TargetAwareCellEmbedding,

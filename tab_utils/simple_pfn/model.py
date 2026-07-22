@@ -19,7 +19,7 @@ import torch.nn as nn
 from .layers import (
     FeatureNormalization,
     RepeatedFeatureGrouping,
-    TargetAwareCellEmbedding,
+    CellEmbedding,
     TabularTransformer,
 )
 
@@ -62,8 +62,8 @@ class SimplePFN(nn.Module):
         # create repeated feature grouping
         self.repeated_feature_grouping = RepeatedFeatureGrouping(feature_group_size)
 
-        # create target-aware cell embedding
-        self.target_aware_cell_embedding = TargetAwareCellEmbedding(
+        # create cell embedding
+        self.cell_embedding = CellEmbedding(
             feature_group_size=feature_group_size,
             num_classes=num_classes,
             embed_dim=embed_dim,
@@ -102,8 +102,8 @@ class SimplePFN(nn.Module):
         # create grouped features
         x = self.repeated_feature_grouping(x)  # (batch_size, num_rows, num_cols, feature_group_size)
 
-        # compute target-aware cell embeddings
-        x = self.target_aware_cell_embedding(x, y_train)  # (batch_size, num_rows, num_cols + 1, embed_dim)
+        # compute cell embeddings
+        x = self.cell_embedding(x, y_train)  # (batch_size, num_rows, num_cols + 1, embed_dim)
 
         # run tabular transformer
         x = self.tabular_transformer(x, num_train)  # (batch_size, num_rows, num_cols + 1, embed_dim)

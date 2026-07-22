@@ -5,7 +5,7 @@ from .classifier import SimplePFNClassifier
 from .layers import (
     FeatureNormalization,
     RepeatedFeatureGrouping,
-    TargetAwareCellEmbedding,
+    CellEmbedding,
     TabularTransformer,
     TabularTransformerBlock,
 )

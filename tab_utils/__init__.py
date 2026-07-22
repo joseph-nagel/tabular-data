@@ -7,7 +7,7 @@ from .simple_pfn import (
     SimplePFNClassifier,
     FeatureNormalization,
     RepeatedFeatureGrouping,
-    TargetAwareCellEmbedding,
+    CellEmbedding,
     TabularTransformer,
     TabularTransformerBlock,
 )

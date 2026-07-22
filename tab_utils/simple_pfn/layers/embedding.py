@@ -85,9 +85,9 @@ class RepeatedFeatureGrouping(nn.Module):
 
 
 # TODO: generalize to regression problems
-class TargetAwareCellEmbedding(nn.Module):
+class CellEmbedding(nn.Module):
     """
-    Target-aware cell embedding (from TabPFN-v2).
+    Cell embedding (from TabPFN-v2).
 
     Parameters
     ----------

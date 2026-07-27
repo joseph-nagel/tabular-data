@@ -1,7 +1,8 @@
 """Utilities for tabular data."""
 
-from . import data, simple_pfn, vis
+from . import data, prior, simple_pfn, vis
 from .data import make_regression_data
+from .prior import PriorDataModule
 from .simple_pfn import (
     SimplePFN,
     SimplePFNClassifier,

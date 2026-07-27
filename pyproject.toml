@@ -19,8 +19,9 @@ keywords = ["tabular data", "foundation models", "prior fitting", "in-context le
 dependencies = [
     "numpy",
     "torch",
+    "lightning",
     "scikit-learn",
-    "tabicl",
+    "tabicl[pretrain]",
     "matplotlib",
     "notebook"
 ]

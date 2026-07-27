@@ -1,6 +1,7 @@
 numpy
 torch
+lightning
 scikit-learn
-tabicl
+tabicl[pretrain]
 matplotlib
 notebook

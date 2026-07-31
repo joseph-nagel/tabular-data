@@ -139,8 +139,7 @@ class PriorDataModule(LightningDataModule):
             min_train_size=self.min_train_size,
             max_train_size=self.max_train_size,
             prior_type=self.prior_type,
-            # n_jobs=-1,
-            # num_threads_per_generate=1,
+            n_jobs=1,  # deactivate Dataset-level parallelism
             # device="cpu",
         )
 

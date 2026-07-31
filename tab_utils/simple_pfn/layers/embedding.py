@@ -117,6 +117,14 @@ class CellEmbedding(nn.Module):
         if y_train.ndim != 2:
             raise ValueError(f"Invalid targets shape: {y_train.shape}")
 
+        # ensure integer-valued targets
+        if torch.is_floating_point(y_train):
+            y_train_int = y_train.int()
+            if torch.equal(y_train, y_train_int):
+                y_train = y_train_int
+            else:
+                raise ValueError("Integer-valued targets expected")
+
         # get shapes
         num_rows = x.shape[1]
         num_train = y_train.shape[1]

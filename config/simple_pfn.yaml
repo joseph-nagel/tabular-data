@@ -1,0 +1,75 @@
+seed_everything: 42
+
+ckpt_path: null
+
+data:
+  class_path: "tab_utils.PriorDataModule"
+  init_args:
+    num_train_batches: 4
+    num_val_batches: 2
+    num_test_batches: 2
+    batch_size: 1
+    batch_size_per_gp: 4
+    min_features: 2
+    max_features: 10
+    max_classes: 10
+    min_seq_len: null
+    max_seq_len: 1024
+    min_train_size: 0.1
+    max_train_size: 0.9
+    prior_type: "mlp_scm"
+    num_workers: 0
+    prefetch_factor: null
+
+model:
+  class_path: "tab_utils.SimplePFN"
+  init_args:
+    num_classes: 10
+    num_blocks: 1
+    num_heads: 2
+    embed_dim: 4
+    hidden_dim: 6
+    feature_group_size: 1
+    loss: "ce"
+    lr: 1e-04
+
+trainer:
+  accelerator: "auto"
+  max_epochs: 5
+  log_every_n_steps: 10
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  logger:
+    class_path: "lightning.pytorch.loggers.TensorBoardLogger"
+    init_args:
+      save_dir: "run/"
+      name: "simple_pfn"
+      version: null
+    # class_path: "lightning.pytorch.loggers.MLFlowLogger"
+    # init_args:
+    #   experiment_name: "simple_pfn"
+    #   run_name: null
+    #   save_dir: "run/mlruns"
+    #   log_model: true
+  callbacks:
+    - class_path: "lightning.pytorch.callbacks.LearningRateMonitor"
+      init_args:
+        logging_interval: null
+    - class_path: "lightning.pytorch.callbacks.ModelCheckpoint"
+      init_args:
+        filename: "best"
+        monitor: "val_loss"
+        mode: "min"
+        save_top_k: 1
+    - class_path: "lightning.pytorch.callbacks.ModelCheckpoint"
+      init_args:
+        filename: "{epoch}"
+        save_top_k: -1
+        every_n_epochs: 1
+        save_last: true
+    # - class_path: "lightning.pytorch.callbacks.ModelCheckpoint"
+    #   init_args:
+    #     filename: "{step}"
+    #     save_top_k: -1
+    #     every_n_train_steps: 100
+    #     save_last: false

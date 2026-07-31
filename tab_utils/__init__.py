@@ -2,8 +2,9 @@
 
 from . import data, prior, simple_pfn, vis
 from .data import make_regression_data
-from .prior import PriorDataModule
+from .prior import TabICLPriorDataset, TabICLPriorIterableDataset, PriorDataModule
 from .simple_pfn import (
+    BasePFN,
     SimplePFN,
     SimplePFNClassifier,
     FeatureNormalization,

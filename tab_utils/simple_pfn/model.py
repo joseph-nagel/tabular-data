@@ -13,9 +13,12 @@ See also NanoTabPFN (https://github.com/automl/nanoTabPFN) and NanoTabICL (https
 
 """
 
+from collections.abc import Callable
+
 import torch
 import torch.nn as nn
 
+from .base import BasePFN
 from .layers import (
     FeatureNormalization,
     RepeatedFeatureGrouping,
@@ -24,7 +27,7 @@ from .layers import (
 )
 
 
-class SimplePFN(nn.Module):
+class SimplePFN(BasePFN):
     """
     Simple tabular PFN architecture for classification.
 
@@ -42,6 +45,10 @@ class SimplePFN(nn.Module):
         Hidden dimensionality of the MLPs.
     feature_group_size: int
         Number of features per group.
+    loss : str | Callable
+        Loss function.
+    lr : float
+        Initial learning rate.
 
     """
 
@@ -53,8 +60,10 @@ class SimplePFN(nn.Module):
         embed_dim: int = 128,
         hidden_dim: int = 256,
         feature_group_size: int = 1,
+        loss: str | Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = "ce",
+        lr: float = 1e-04,
     ):
-        super().__init__()
+        super().__init__(loss=loss, lr=lr)
 
         # create feature normalization
         self.feature_normalization = FeatureNormalization()
@@ -83,6 +92,9 @@ class SimplePFN(nn.Module):
             nn.GELU(),
             nn.Linear(hidden_dim, num_classes),
         )
+
+        # save hyperparameters
+        self.save_hyperparameters()
 
     def forward(self, x: torch.Tensor, y_train: torch.Tensor) -> torch.Tensor:
         # ensure features of shape (batch_size, num_rows, num_cols)

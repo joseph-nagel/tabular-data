@@ -1,8 +1,48 @@
 """Dataset prior."""
 
-from torch.utils.data import DataLoader
-from lightning import LightningDataModule
+from collections.abc import Sequence
+from typing import Any, Self
+
+import torch
+from torch.utils.data import Dataset, DataLoader
+from lightning.pytorch import LightningDataModule
+from lightning.fabric.utilities.seed import pl_worker_init_function
 from tabicl.prior import PriorDataset
+
+
+class TabICLPriorDataset(Dataset):
+    """Finite-length version for the infinite TabICL dataset prior."""
+
+    def __init__(self, num_batches: int, *args: Any, **kwargs: Any):
+        self.prior_dataset = PriorDataset(*args, **kwargs)  # initialize infinite prior dataset
+        self.num_batches = abs(num_batches)
+
+    def __len__(self) -> int:
+        return self.num_batches * self.prior_dataset.batch_size
+
+    def __getitem__(self, idx: int) -> Sequence[torch.Tensor]:
+        return next(self.prior_dataset)
+
+
+class TabICLPriorIterableDataset(PriorDataset):
+    """TabICL dataset prior with finite number of batches."""
+
+    def __init__(self, num_batches: int | None, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)  # initialize infinite prior dataset parent class
+        self.num_batches = num_batches
+        self._batch_idx = 0 if num_batches is not None else None
+
+    def __iter__(self) -> Self:
+        return self
+
+    def __next__(self) -> Sequence[torch.Tensor]:
+        if self.num_batches is None:
+            return super().__next__()
+        elif self._batch_idx < self.num_batches:
+            self._batch_idx += 1
+            return super().__next__()
+        else:
+            raise StopIteration()
 
 
 class PriorDataModule(LightningDataModule):
@@ -11,6 +51,12 @@ class PriorDataModule(LightningDataModule):
 
     Parameters
     ----------
+    num_train_batches : int | None = None
+        Number of batches for training.
+    num_val_batches : int | None = None
+        Number of batches for validation.
+    num_test_batches : int | None = None
+        Number of batches for testing.
     batch_size : int
         Total number of datasets to generate per batch.
     batch_size_per_gp : int
@@ -29,7 +75,7 @@ class PriorDataModule(LightningDataModule):
         Minimum train split size.
     max_train_size : int | float
         Maximum train split size.
-    prior_type : {`mlp_scm`, `tree_scm`, `mix_scm`, or `dummy`}
+    prior_type : {"mlp_scm", "tree_scm", "mix_scm", "dummy"}
         Type of the dataset prior.
     num_workers : int
         Number of workers for the loader.
@@ -40,6 +86,9 @@ class PriorDataModule(LightningDataModule):
 
     def __init__(
         self,
+        num_train_batches: int | None = None,
+        num_val_batches: int | None = None,
+        num_test_batches: int | None = None,
         batch_size: int = 32,
         batch_size_per_gp: int = 4,
         min_features: int = 2,
@@ -52,9 +101,13 @@ class PriorDataModule(LightningDataModule):
         prior_type: str = "mlp_scm",
         num_workers: int = 0,
         prefetch_factor: int | None = None,
-        **kwargs,
     ):
         super().__init__()
+
+        # set batch numbers
+        self.num_train_batches = num_train_batches
+        self.num_val_batches = num_val_batches
+        self.num_test_batches = num_test_batches
 
         # set dataset parameters
         self.batch_size = batch_size
@@ -67,48 +120,60 @@ class PriorDataModule(LightningDataModule):
         self.min_train_size = min_train_size
         self.max_train_size = max_train_size
         self.prior_type = prior_type
-        self.kwargs = kwargs
 
         # set loader parameters
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
 
-    # def prepare_data(self) -> None:
-    #     """Download data."""
-    #     pass
+    def _make_dataset(self, num_batches: int | None = None) -> TabICLPriorDataset:
+        """Create prior dataset."""
+        return TabICLPriorDataset(
+            num_batches=num_batches,
+            batch_size=self.batch_size,  # set batch size on the Dataset level
+            batch_size_per_gp=self.batch_size_per_gp,
+            min_features=self.min_features,
+            max_features=self.max_features,
+            max_classes=self.max_classes,
+            min_seq_len=self.min_seq_len,
+            max_seq_len=self.max_seq_len,
+            min_train_size=self.min_train_size,
+            max_train_size=self.max_train_size,
+            prior_type=self.prior_type,
+            # n_jobs=-1,
+            # num_threads_per_generate=1,
+            # device="cpu",
+        )
 
-    def setup(self, stage: str) -> None:
-        """Set up dataset."""
-        if stage in ("fit", "validate", "test"):
-            self.dataset = PriorDataset(
-                batch_size=self.batch_size,  # set batch size on the Dataset level
-                batch_size_per_gp=self.batch_size_per_gp,
-                min_features=self.min_features,
-                max_features=self.max_features,
-                max_classes=self.max_classes,
-                min_seq_len=self.min_seq_len,
-                max_seq_len=self.max_seq_len,
-                min_train_size=self.min_train_size,
-                max_train_size=self.max_train_size,
-                prior_type=self.prior_type,
-                **self.kwargs,
-            )
-
-    def train_dataloader(self) -> DataLoader:
-        """Create train dataloader."""
+    # TODO: Does this ensure different seeds for train, val. and test set?
+    def _make_loader(self, dataset: Dataset) -> DataLoader:
+        """Create prior dataloader."""
         return DataLoader(
-            self.dataset,
+            dataset,
             batch_size=None,  # turn off additional batching on the DataLoader level
             shuffle=False,  # turn off shuffling since not necessary
             num_workers=self.num_workers,
-            pin_memory=self.num_workers > 0,  # use page-locked memory if data is fetched in a parallel subprocess
+            pin_memory=self.num_workers > 0,  # use page-locked memory if data is fetched in parallel subprocesses
+            worker_init_fn=pl_worker_init_function if self.num_workers > 0 else None,  # set random seed per worker
             prefetch_factor=self.prefetch_factor if self.num_workers > 0 else None,
         )
 
+    def setup(self, stage: str) -> None:
+        """Set up train/val./test datasets."""
+        if stage == "fit":
+            self.train_set = self._make_dataset(self.num_train_batches)
+        if stage in ("fit", "validate"):
+            self.val_set = self._make_dataset(self.num_val_batches)
+        elif stage == "test":
+            self.test_set = self._make_dataset(self.num_test_batches)
+
+    def train_dataloader(self) -> DataLoader:
+        """Create train dataloader."""
+        return self._make_loader(self.train_set)
+
     def val_dataloader(self) -> DataLoader:
         """Create val. dataloader."""
-        return self.train_dataloader()
+        return self._make_loader(self.val_set)
 
     def test_dataloader(self) -> DataLoader:
         """Create test dataloader."""
-        return self.train_dataloader()
+        return self._make_loader(self.test_set)

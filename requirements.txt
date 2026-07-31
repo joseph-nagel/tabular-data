@@ -1,6 +1,7 @@
 numpy
 torch
 lightning
+tensorboard
 scikit-learn
 tabicl[pretrain]
 matplotlib

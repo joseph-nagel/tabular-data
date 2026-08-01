@@ -18,7 +18,7 @@ class TabICLPriorDataset(Dataset):
         self.num_batches = abs(num_batches)
 
     def __len__(self) -> int:
-        return self.num_batches * self.prior_dataset.batch_size
+        return self.num_batches  # do not multiply by self.prior_dataset.batch_size
 
     def __getitem__(self, idx: int) -> Sequence[torch.Tensor]:
         return next(self.prior_dataset)

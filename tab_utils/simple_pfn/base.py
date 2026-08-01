@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence, Callable
+from numbers import Number
 
 import torch
 import torch.nn as nn
@@ -64,22 +65,30 @@ class BasePFN(LightningModule, ABC):
 
         return self.criterion(y_pred, y_test.long())
 
-    # TODO: generalize to unequal train sizes, nested tensors, etc.
     @staticmethod
-    def _get_batch(batch: Sequence[torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor, int]:
+    def _get_value_if_all_equal(t: torch.Tensor) -> Number:
+        """Get unique element value if all elements are identical."""
+        first_val = t.flatten()[0]
+        all_equal = torch.all(t == first_val)
+        if all_equal:
+            return first_val.item()
+        else:
+            raise ValueError(f"Non-identical elements: {t.unique().tolist()}")
+
+    # TODO: generalize to unequal train sizes, nested tensors, etc.
+    @classmethod
+    def _get_batch(cls, batch: Sequence[torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor, int]:
         """Get batch."""
+        if len(batch) != 5:
+            raise ValueError("Expected five batch tuple elements")
+
         # get features, targets and training sizes
         x = batch[0]  # (batch_size, num_samples, num_features)
         y = batch[1]  # (batch_size, num_samples)
-        # num_active_features = batch[2]  # (batch_size,)
-        # num_samples = batch[3]  # (batch_size,)
         num_train = batch[4]  # (batch_size,)
 
         # ensure idential training size within the batch
-        if torch.all(num_train == num_train.flatten()[0]):
-            num_train = num_train.flatten()[0]
-        else:
-            raise ValueError("Training sizes need to be identical within a batch")
+        num_train = cls._get_value_if_all_equal(num_train)
 
         return x, y, num_train
 

@@ -16,6 +16,7 @@ The implementation combines ideas from TabPFN as well as TabICL and focuses on c
 - [Introduction](notebooks/intro.ipynb)
 - [TabICL for classification](notebooks/tabicl_classif.ipynb)
 - [TabICL for regression](notebooks/tabicl_reg.ipynb)
+- [Simple PFN](notebooks/simple_pfn.ipynb)
 
 
 ## Installation

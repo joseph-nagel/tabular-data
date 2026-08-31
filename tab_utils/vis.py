@@ -67,15 +67,15 @@ def plot_function_2d(
         y_limits = ax.get_ylim()
 
     # create inputs
-    x_values = np.linspace(*x_limits, num=gridpoints)
-    y_values = np.linspace(*y_limits, num=gridpoints)
+    x_values = np.linspace(*x_limits, num=gridpoints)  # (gridpoints,)
+    y_values = np.linspace(*y_limits, num=gridpoints)  # (gridpoints,)
 
-    (x_grid, y_grid) = np.meshgrid(x_values, y_values)
-    xy_values = np.stack((x_grid.ravel(), y_grid.ravel()), axis=1)
+    (x_grid, y_grid) = np.meshgrid(x_values, y_values)  # (gridpoints, gridpoints)
+    xy_values = np.stack((x_grid.ravel(), y_grid.ravel()), axis=1)  # (gridpoints**2, 2)
 
     # compute outputs
-    z_values = function(xy_values)
-    z_grid = z_values.reshape(x_grid.shape)
+    z_values = function(xy_values)  # (gridpoints**2,)
+    z_grid = z_values.reshape(x_grid.shape)  # (gridpoints, gridpoints)
 
     # plot function
     im1 = ax.imshow(
